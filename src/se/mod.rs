@@ -63,14 +63,12 @@ impl<W: Write> Serializer<W> {
     }
 
     fn enter_pending_field(&mut self, field: &'static str) -> &mut Self {
-        println!("({}) Pending: Fields={:?}", field, self.fields);
         self.pending_field = Some(field);
         self
     }
 
     fn enter_field(&mut self, field: &'static str) -> Result<(), DeError> {
         self.pending_field.take();
-        println!("({}) Start: Fields={:?}", field, self.fields);
         self.writer
             .write_event(Event::Start(BytesStart::borrowed_name(field.as_bytes())))?;
         self.fields.push(Some(field));
@@ -78,7 +76,6 @@ impl<W: Write> Serializer<W> {
     }
 
     fn activate_pending_field(&mut self) -> Result<(), DeError> {
-        println!("Attempting to activate pending: Pending={:?}   Fields={:?}", self.pending_field, self.fields);
         if let Some(f) = self.pending_field.take() {
             self.enter_field(f)?;
         }
@@ -86,7 +83,6 @@ impl<W: Write> Serializer<W> {
     }
 
     fn exit_field(&mut self) -> Result<(), DeError> {
-        println!("End: Fields={:?}", self.fields);
         self.pending_field.take();
         if let Some(Some(f)) = self.fields.pop() {
             self.writer
@@ -206,7 +202,6 @@ impl<'w, W: Write> ser::Serializer for &'w mut Serializer<W> {
     ) -> Result<Self::Ok, DeError> {
         self.writer
             .write_event(Event::Empty(BytesStart::borrowed_name(variant.as_bytes())))?;
-        println!("serialize_unit_variant {} exit", variant);
         Ok(())
     }
 
@@ -228,7 +223,6 @@ impl<'w, W: Write> ser::Serializer for &'w mut Serializer<W> {
         self.activate_pending_field()?;
         self.enter_field(variant)?;
         value.serialize(&mut *self)?;
-        println!("serialize_newtype_variant {} write_end", variant);
         self.exit_field()?;
         Ok(())
     }
