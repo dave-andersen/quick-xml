@@ -103,13 +103,11 @@ where
             self.parent.skip_field();
         }
         value.serialize(&mut *self.parent)?;
-        println!("serialize_field {} write_end", key);
         self.parent.exit_field()?;
         Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, DeError> {
-        println!("Finalizing struct {}", self.name);
         self.parent.exit_field()?;
         Ok(())
     }
